@@ -1,0 +1,29 @@
+exclude: ^(dep|build|install|log)/
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+
+  - repo: https://github.com/psf/black
+    rev: 24.10.0
+    hooks:
+      - id: black
+        args: [--line-length=100]
+
+  - repo: local
+    hooks:
+      - id: ament-clang-format
+        name: ament_clang_format
+        entry: ament_clang_format --reformat
+        language: system
+        files: \.(c|cc|cpp|cxx|h|hh|hpp|hxx)$

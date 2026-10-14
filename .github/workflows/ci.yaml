@@ -1,0 +1,67 @@
+name: ROS 2 Jazzy CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-24.04
+    env:
+      ROS_DISTRO: ${{ matrix.ros_distro }}
+    strategy:
+      matrix:
+        ros_distro: [jazzy]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          token: ${{ secrets.PAT_TOKEN || github.token }}
+
+      - name: Setup ROS 2
+        uses: ros-tooling/setup-ros@v0.7
+        with:
+          required-ros-distributions: ${{ matrix.ros_distro }}
+
+      - name: Install CI tools
+        run: |
+          sudo apt update
+          sudo apt install -y just pre-commit
+
+      - name: Install dependencies
+        run: just deps
+
+      - name: Format code
+        run: |
+          source /opt/ros/${ROS_DISTRO}/setup.bash
+          just format
+
+      - name: Commit and push changes
+        uses: stefanzweifel/git-auto-commit-action@v7
+        with:
+          commit_message: "style: auto formatting"
+          file_pattern: '*'
+
+      - name: Build with colcon
+        run: |
+          source /opt/ros/${ROS_DISTRO}/setup.bash
+          just build
+
+      - name: Run tests
+        run: |
+          source /opt/ros/${ROS_DISTRO}/setup.bash
+          just test
+
+      - name: Check test results
+        run: |
+          if [ -d log/latest_test ]; then
+            colcon test-result --verbose
+          else
+            echo "No test results found. Skipping."
+          fi
