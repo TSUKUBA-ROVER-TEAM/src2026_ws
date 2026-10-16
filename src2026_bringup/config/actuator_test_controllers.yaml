@@ -1,0 +1,62 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 100
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    drive_left_forward_test:
+      type: forward_command_controller/ForwardCommandController
+    drive_right_forward_test:
+      type: forward_command_controller/ForwardCommandController
+    drive_left_backward_test:
+      type: forward_command_controller/ForwardCommandController
+    drive_right_backward_test:
+      type: forward_command_controller/ForwardCommandController
+    steer_left_forward_test:
+      type: forward_command_controller/ForwardCommandController
+    steer_right_forward_test:
+      type: forward_command_controller/ForwardCommandController
+    steer_left_backward_test:
+      type: forward_command_controller/ForwardCommandController
+    steer_right_backward_test:
+      type: forward_command_controller/ForwardCommandController
+
+drive_left_forward_test:
+  ros__parameters:
+    joints: [drive_left_forward_joint]
+    interface_name: velocity
+
+drive_right_forward_test:
+  ros__parameters:
+    joints: [drive_right_forward_joint]
+    interface_name: velocity
+
+drive_left_backward_test:
+  ros__parameters:
+    joints: [drive_left_backward_joint]
+    interface_name: velocity
+
+drive_right_backward_test:
+  ros__parameters:
+    joints: [drive_right_backward_joint]
+    interface_name: velocity
+
+steer_left_forward_test:
+  ros__parameters:
+    joints: [steer_left_forward_joint]
+    interface_name: position
+
+steer_right_forward_test:
+  ros__parameters:
+    joints: [steer_right_forward_joint]
+    interface_name: position
+
+steer_left_backward_test:
+  ros__parameters:
+    joints: [steer_left_backward_joint]
+    interface_name: position
+
+steer_right_backward_test:
+  ros__parameters:
+    joints: [steer_right_backward_joint]
+    interface_name: position

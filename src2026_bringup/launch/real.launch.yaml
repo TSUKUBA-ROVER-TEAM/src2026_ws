@@ -1,0 +1,50 @@
+launch:
+  - arg:
+      name: can_interface
+      default: can0
+      description: SocketCAN interface used by itr_can_hardware
+  - arg:
+      name: drive_gear_ratio
+      default: '19.0'
+      description: Robomas motor rotations per wheel rotation
+  - arg:
+      name: robomas_board_id
+      default: '1'
+      description: CAN board ID for the four Robomas drive modules
+  - arg:
+      name: servo_board_id
+      default: '1'
+      description: CAN board ID for the four steering servo modules
+
+  - node:
+      pkg: controller_manager
+      exec: ros2_control_node
+      name: controller_manager
+      output: screen
+      param:
+        - name: robot_description
+          value: $(command 'xacro $(find-pkg-share src2026_description)/urdf/src2026.xacro use_real_hardware:=true can_interface:=$(var can_interface) drive_gear_ratio:=$(var drive_gear_ratio) robomas_board_id:=$(var robomas_board_id) servo_board_id:=$(var servo_board_id)')
+        - from: $(find-pkg-share src2026_bringup)/config/real_controllers.yaml
+
+  - node:
+      pkg: robot_state_publisher
+      exec: robot_state_publisher
+      name: robot_state_publisher
+      output: screen
+      param:
+        - name: robot_description
+          value: $(command 'xacro $(find-pkg-share src2026_description)/urdf/src2026.xacro use_real_hardware:=true can_interface:=$(var can_interface) drive_gear_ratio:=$(var drive_gear_ratio) robomas_board_id:=$(var robomas_board_id) servo_board_id:=$(var servo_board_id)')
+
+  - node:
+      pkg: controller_manager
+      exec: spawner
+      name: joint_state_broadcaster_spawner
+      output: screen
+      args: joint_state_broadcaster -c /controller_manager
+
+  - node:
+      pkg: controller_manager
+      exec: spawner
+      name: itr_swerve_controller_spawner
+      output: screen
+      args: itr_swerve_controller -c /controller_manager
