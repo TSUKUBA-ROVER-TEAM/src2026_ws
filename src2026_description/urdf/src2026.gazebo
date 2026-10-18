@@ -140,7 +140,7 @@
         <param name="module_id">13</param>
         <param name="command_mode">position</param>
         <param name="position_scale">1.0</param>
-        <param name="velocity_limit">5.0</param>
+        <param name="velocity_limit">50.0</param>
         <param name="current_limit">10000.0</param>
         <command_interface name="position" />
         <state_interface name="position" />

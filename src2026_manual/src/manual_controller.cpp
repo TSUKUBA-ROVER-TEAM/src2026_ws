@@ -29,7 +29,7 @@ ManualController::ManualController(const rclcpp::NodeOptions & options)
   this->declare_parameter("gripper_positive_button", 4);
   this->declare_parameter("gripper_negative_button", 5);
   this->declare_parameter("arm_y_velocity_scale", 20000.0);
-  this->declare_parameter("arm_4_position_rate", 0.5);
+  this->declare_parameter("arm_4_position_rate", 10.0);
   this->declare_parameter("gripper_velocity_scale", 5000.0);
   this->declare_parameter("deadzone", 0.01);
   this->declare_parameter("joy_timeout", 0.5);
