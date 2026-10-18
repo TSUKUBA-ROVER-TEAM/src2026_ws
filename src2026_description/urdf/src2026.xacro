@@ -466,8 +466,19 @@
     </collision>
   </link>
 
-  <link name="arm_3_virtual_link" />
-  <link name="shaft_virtual_link" />
+  <!-- Gazebo drops massless links while converting URDF to SDF.  Keep these
+       transmission links in the model with negligible inertia. -->
+  <xacro:macro name="virtual_link" params="name">
+    <link name="${name}">
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <mass value="0.001" />
+        <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6" />
+      </inertial>
+    </link>
+  </xacro:macro>
+  <xacro:virtual_link name="arm_3_virtual_link" />
+  <xacro:virtual_link name="shaft_virtual_link" />
 
   <link name="base_scan">
     <inertial>

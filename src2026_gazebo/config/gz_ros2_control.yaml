@@ -1,0 +1,66 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 100  # Hz
+
+    itr_swerve_controller:
+      type: itr_swerve_controller/ITRSwerveController
+
+    arm_controller:
+      type: forward_command_controller/ForwardCommandController
+
+    gripper_controller:
+      type: forward_command_controller/ForwardCommandController
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    joint_state_controller:
+      type: joint_state_controller/JointStateController
+
+
+itr_swerve_controller:
+  ros__parameters:
+    wheel_joints:
+      - drive_left_forward_joint
+      - drive_right_forward_joint
+      - drive_left_backward_joint
+      - drive_right_backward_joint
+    steering_joints:
+      - steer_left_forward_joint
+      - steer_right_forward_joint
+      - steer_left_backward_joint
+      - steer_right_backward_joint
+    steering_directions: [1.0, -1.0, -1.0, 1.0]
+    wheel_directions: [1.0, 1.0, -1.0, -1.0]
+    module_positions:
+      x: [0.400, 0.400, -0.400, -0.400]
+      y: [0.292, -0.292, 0.292, -0.292]
+    wheel_radius: 0.100
+    command_topic: /cmd_vel
+    command_timeout: 0.5
+    velocity_epsilon: 0.000001
+    steering_gear_ratio: 1.0
+    max_steering_rotations: 0.375
+    max_wheel_angular_velocity: 0.0
+    odom_topic: /odom
+    odom_frame_id: odom
+    base_frame_id: base_link
+    enable_odom_tf: true
+    publish_commanded_joint_states: true
+    commanded_joint_states_topic: /swerve_commanded_joint_states
+    commanded_joint_states_publish_rate: 50.0
+
+arm_controller:
+  ros__parameters:
+    joints:
+      - arm_1_joint
+      - arm_2_joint
+      - arm_3_joint
+      - arm_4_joint
+    interface_name: position
+
+gripper_controller:
+  ros__parameters:
+    joints:
+      - hand_right_joint
+    interface_name: position

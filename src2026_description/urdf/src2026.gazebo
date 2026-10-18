@@ -56,6 +56,31 @@
       <state_interface name="position">position</state_interface>
       <state_interface name="velocity">velocity</state_interface>
     </joint>
+    <joint name="arm_1_joint">
+      <command_interface name="position">position</command_interface>
+      <state_interface name="position">position</state_interface>
+      <state_interface name="velocity">velocity</state_interface>
+    </joint>
+    <joint name="arm_2_joint">
+      <command_interface name="position">position</command_interface>
+      <state_interface name="position">position</state_interface>
+      <state_interface name="velocity">velocity</state_interface>
+    </joint>
+    <joint name="arm_3_joint">
+      <command_interface name="position">position</command_interface>
+      <state_interface name="position">position</state_interface>
+      <state_interface name="velocity">velocity</state_interface>
+    </joint>
+    <joint name="arm_4_joint">
+      <command_interface name="position">position</command_interface>
+      <state_interface name="position">position</state_interface>
+      <state_interface name="velocity">velocity</state_interface>
+    </joint>
+    <joint name="hand_right_joint">
+      <command_interface name="position">position</command_interface>
+      <state_interface name="position">position</state_interface>
+      <state_interface name="velocity">velocity</state_interface>
+    </joint>
   </ros2_control>
   </xacro:unless>
 
@@ -108,7 +133,6 @@
     </ros2_control>
   </xacro:if>
 
-  <!-- 仮想モードの時はGazeboプラグインを読み込まない -->
   <xacro:unless value="$(arg use_fake_hardware)">
     <xacro:unless value="$(arg use_real_hardware)">
     <gazebo>
