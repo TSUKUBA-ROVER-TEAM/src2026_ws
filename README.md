@@ -1,4 +1,52 @@
-# ROS 2 Project Template
+# SRC2026 workspace
+
+## 実機の足回り
+
+足回りの4台はRobomas基板のU3（FDCAN1、Classic CAN 1 Mbps）へ接続します。
+PCのUSB-CANは基板の上位CAN（FDCAN2）へ接続してください。
+
+| 車輪 | joint | U3のESC ID / module_id |
+|---|---|---|
+| 左前 | drive_left_forward_joint | 1 |
+| 右前 | drive_right_forward_joint | 2 |
+| 左後 | drive_left_backward_joint | 3 |
+| 右後 | drive_right_backward_joint | 4 |
+
+Robomas基板IDの既定値は3、PCのインターフェースは`can0`です。
+`module_id`からモータ種類とバスを判定するため、`motor_type`の設定は不要です。
+車輪rad/sとモータRPMの変換には`drive_gear_ratio`（既定19.0）を使います。
+U5のRobomasはmodule ID 5〜8、DaMiaoは13〜15です。`arm_4_joint`はDaMiao ID1
+(module ID 13)、`gripper_joint`はRobomas ID1 (module ID 5)、`arm_y_joint`はRobomas ID2
+(module ID 6)に割り当てています。
+arm操作はforward command controllerで、`arm_4_joint`を位置制御、`arm_y_joint`と
+`gripper_joint`を速度制御します。位置指令はaxisを押している間に積算します。
+`arm_4_joint`はaxes[2]を正方向、axes[5]を負方向に使います。未押下の値1.0を基準に
+押下量を速度へ変換します。`gripper_joint`はbutton[4]/button[5]で正負に動き、速度は30です。
+
+```bash
+source /opt/ros/jazzy/setup.bash
+colcon build --symlink-install --packages-up-to src2026_bringup
+source install/setup.bash
+ros2 launch src2026_bringup real.launch.yaml can_interface:=can0 robomas_board_id:=3
+```
+
+実機launchは足回りのcontrollerとジョイスティック操作ノードを起動します。
+1軸ずつ確認する場合は、controllerをinactiveで読み込む次のlaunchを使います。
+
+```bash
+ros2 launch src2026_bringup actuator_test.launch.yaml robomas_board_id:=3
+```
+
+CAN FD・BRSなし・1 Mbpsの上位通信と、命令8のページ形式フィードバックに
+対応したRobomas_G474REファームを使ってください。
+Robomasの位置フィードバックは未実装のため、実機の位置stateは0のままです。
+
+`build_depends.repos`は今回のCAN更新と既存スワーブ制御を統合した版に固定しています。
+依存リポジトリのサーボ補正・スワーブ制御のローカル変更は保持しています。
+固定コミットはまだGitHubへpushしていないため、新規取得時は公開後に`vcs import`するか、
+このPCの更新済み`dep/itr_control`と`dep/itr_can_protocol`から取得してください。
+
+## 開発環境
 
 ROS 2 Jazzy 向けのプロジェクトテンプレートです。
 Dev Container、GitHub Actions、`just` による開発コマンドを含んでいます。

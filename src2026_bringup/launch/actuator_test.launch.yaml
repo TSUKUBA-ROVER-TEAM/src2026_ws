@@ -9,7 +9,7 @@ launch:
       description: Robomas motor rotations per wheel rotation
   - arg:
       name: robomas_board_id
-      default: '1'
+      default: '3'
       description: CAN board ID for the four Robomas drive modules
   - arg:
       name: servo_board_id

@@ -32,3 +32,6 @@ launch:
         - {name: "world", value: "$(var world)"}
         - {name: "robot_name", value: "$(var robot_name)"}
         - {name: "robot_sdf", value: "$(var robot_sdf)"}
+
+  - include:
+      file: "$(find-pkg-share src2026_manual)/launch/teleop.launch.yaml"

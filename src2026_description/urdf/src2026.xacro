@@ -6,7 +6,8 @@
   <xacro:arg name="use_real_hardware" default="false" />
   <xacro:arg name="can_interface" default="can0" />
   <xacro:arg name="drive_gear_ratio" default="19.0" />
-  <xacro:arg name="robomas_board_id" default="1" />
+  <xacro:arg name="robomas_board_id" default="3" />
+  <xacro:arg name="arm_y_module_id" default="6" />
   <xacro:arg name="servo_board_id" default="1" />
 
   <xacro:include filename="$(find src2026_description)/urdf/materials.xacro" />
@@ -582,7 +583,7 @@
     <axis xyz="-0.0 1.0 -0.0" />
   </joint>
 
-  <joint name="hand_right_joint" type="prismatic">
+  <joint name="gripper_joint" type="prismatic">
     <origin xyz="-0.1077 -7e-06 0.082" rpy="0 0 0" />
     <parent link="arm_4_link" />
     <child link="hand_right_link" />
@@ -595,7 +596,7 @@
     <parent link="arm_4_link" />
     <child link="hand_left_link" />
     <axis xyz="1.0 0.0 0.0" />
-    <mimic joint="hand_right_joint" multiplier="1.0" offset="0.0" />
+    <mimic joint="gripper_joint" multiplier="1.0" offset="0.0" />
     <limit upper="0.07" lower="0.0" effort="100" velocity="100" />
   </joint>
 
@@ -603,6 +604,13 @@
     <origin xyz="0.1 0.0 0.213" rpy="0 0 1.57" />
     <parent link="base_link" />
     <child link="arm_1_link" />
+    <axis xyz="0.0 0.0 -1.0" />
+  </joint>
+
+  <link name="arm_y_link" />
+  <joint name="arm_y_joint" type="continuous">
+    <parent link="base_link" />
+    <child link="arm_y_link" />
     <axis xyz="0.0 0.0 -1.0" />
   </joint>
 

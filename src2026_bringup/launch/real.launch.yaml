@@ -9,8 +9,12 @@ launch:
       description: Robomas motor rotations per wheel rotation
   - arg:
       name: robomas_board_id
-      default: '1'
+      default: '3'
       description: CAN board ID for the four Robomas drive modules
+  - arg:
+      name: arm_y_module_id
+      default: '6'
+      description: Robomas module ID for arm_y_joint (6 is U5 ESC ID 2)
   - arg:
       name: servo_board_id
       default: '1'
@@ -23,7 +27,7 @@ launch:
       output: screen
       param:
         - name: robot_description
-          value: $(command 'xacro $(find-pkg-share src2026_description)/urdf/src2026.xacro use_real_hardware:=true can_interface:=$(var can_interface) drive_gear_ratio:=$(var drive_gear_ratio) robomas_board_id:=$(var robomas_board_id) servo_board_id:=$(var servo_board_id)')
+          value: $(command 'xacro $(find-pkg-share src2026_description)/urdf/src2026.xacro use_real_hardware:=true can_interface:=$(var can_interface) drive_gear_ratio:=$(var drive_gear_ratio) robomas_board_id:=$(var robomas_board_id) arm_y_module_id:=$(var arm_y_module_id) servo_board_id:=$(var servo_board_id)')
         - from: $(find-pkg-share src2026_bringup)/config/real_controllers.yaml
 
   - node:
@@ -33,7 +37,7 @@ launch:
       output: screen
       param:
         - name: robot_description
-          value: $(command 'xacro $(find-pkg-share src2026_description)/urdf/src2026.xacro use_real_hardware:=true can_interface:=$(var can_interface) drive_gear_ratio:=$(var drive_gear_ratio) robomas_board_id:=$(var robomas_board_id) servo_board_id:=$(var servo_board_id)')
+          value: $(command 'xacro $(find-pkg-share src2026_description)/urdf/src2026.xacro use_real_hardware:=true can_interface:=$(var can_interface) drive_gear_ratio:=$(var drive_gear_ratio) robomas_board_id:=$(var robomas_board_id) arm_y_module_id:=$(var arm_y_module_id) servo_board_id:=$(var servo_board_id)')
 
   - node:
       pkg: controller_manager
@@ -48,3 +52,20 @@ launch:
       name: itr_swerve_controller_spawner
       output: screen
       args: itr_swerve_controller -c /controller_manager
+
+  - node:
+      pkg: controller_manager
+      exec: spawner
+      name: arm_position_controller_spawner
+      output: screen
+      args: arm_position_controller -c /controller_manager
+
+  - node:
+      pkg: controller_manager
+      exec: spawner
+      name: arm_velocity_controller_spawner
+      output: screen
+      args: arm_velocity_controller -c /controller_manager
+
+  - include:
+      file: $(find-pkg-share src2026_manual)/launch/teleop.launch.yaml

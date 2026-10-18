@@ -5,10 +5,10 @@ controller_manager:
     itr_swerve_controller:
       type: itr_swerve_controller/ITRSwerveController
 
-    arm_controller:
+    arm_position_controller:
       type: forward_command_controller/ForwardCommandController
 
-    gripper_controller:
+    arm_velocity_controller:
       type: forward_command_controller/ForwardCommandController
 
     joint_state_broadcaster:
@@ -50,17 +50,12 @@ itr_swerve_controller:
     commanded_joint_states_topic: /swerve_commanded_joint_states
     commanded_joint_states_publish_rate: 50.0
 
-arm_controller:
+arm_position_controller:
   ros__parameters:
-    joints:
-      - arm_1_joint
-      - arm_2_joint
-      - arm_3_joint
-      - arm_4_joint
+    joints: [arm_4_joint]
     interface_name: position
 
-gripper_controller:
+arm_velocity_controller:
   ros__parameters:
-    joints:
-      - hand_right_joint
-    interface_name: position
+    joints: [arm_y_joint, gripper_joint]
+    interface_name: velocity

@@ -1,0 +1,12 @@
+launch:
+  - node:
+      pkg: joy
+      exec: joy_node
+      name: joy_node
+      output: screen
+
+  - node:
+      pkg: src2026_manual
+      exec: manual_controller_node
+      name: manual_controller
+      output: screen

@@ -111,12 +111,12 @@
     </actuator>
   </transmission>
 
-  <transmission name="hand_right_joint_tran">
+  <transmission name="gripper_joint_tran">
     <type>transmission_interface/SimpleTransmission</type>
-    <joint name="hand_right_joint">
+    <joint name="gripper_joint">
       <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
     </joint>
-    <actuator name="hand_right_joint_actr">
+    <actuator name="gripper_joint_actr">
       <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
       <mechanicalReduction>1</mechanicalReduction>
     </actuator>
