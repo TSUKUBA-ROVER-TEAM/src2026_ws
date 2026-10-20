@@ -37,6 +37,9 @@ def manager():
     node.hardware_recovery_pending = False
     node.hardware_error = node.hardware_busy = node.busy = False
     node.phase = 'running'
+    node.calibration_paused = False
+    node.calibration_busy = False
+    node.calibration_verified = False
     node.initial = [0.0, 0.0, 0.6, 0.2]
     node.accept_after = 100
     node.initial_trajectory_duration = .1
@@ -221,3 +224,91 @@ def test_reject_malformed_nonfinite_or_expired_trajectories():
     for msg in messages:
         node.on_command(msg)
     node.command_publisher.publish.assert_not_called()
+
+
+def test_calibration_pause_prevents_commands_recovery_and_auto_activation():
+    node = manager()
+    node.calibration_paused = True
+    node.on_command(command(500))
+    node.command_publisher.publish.assert_not_called()
+    node.request_recovery()
+    node.recovery_publisher.publish.assert_not_called()
+    node.hardware_client.call_async.assert_not_called()
+    node._controllers_listed(controllers(True))
+    assert node.switch_client.call_async.call_args.args[0].deactivate_controllers == [node.controller]
+    node.switch_client.reset_mock()
+    node._controllers_listed(controllers(False))
+    assert node.phase == 'waiting'
+    node.switch_client.call_async.assert_not_called()
+    node.phase = 'priming'
+    node.on_gate(UInt64MultiArray(data=[3, 0, 1, 1]))
+    assert node.phase != 'running'
+
+
+def test_calibration_blocks_late_activation_and_requires_explicit_verified_resume():
+    from std_srvs.srv import Trigger
+    node = manager()
+    node.calibration_paused = True
+    node._switched(result(SimpleNamespace(ok=True)), True, 3)
+    node.release_publisher.publish.assert_not_called()
+    response = node.resume_calibration(Trigger.Request(), Trigger.Response())
+    assert not response.success
+    assert node.calibration_paused
+    node.calibration_verified = True
+    response = node.resume_calibration(Trigger.Request(), Trigger.Response())
+    assert response.success
+    assert not node.calibration_paused
+    assert node.phase == 'waiting'
+    assert not node.calibration_verified
+    node.release_publisher.publish.assert_not_called()  # Normal handshake still required.
+
+
+def test_zero_workflow_sends_only_after_stop_and_remains_paused_on_success_or_failure():
+    import asyncio
+    from std_srvs.srv import Trigger
+    for success in [True, False]:
+        node = manager()
+        node.zero_clients = {'arm_3_joint': Mock()}
+        node.zero_clients['arm_3_joint'].call_async.return_value = SimpleNamespace(
+            done=lambda: True,
+            result=lambda: Trigger.Response(success=success, message='driver result'))
+        waits = []
+
+        async def wait_for(predicate, timeout):
+            waits.append(timeout)
+            if len(waits) == 1:
+                assert node.calibration_paused
+                assert node.accept_after is None
+                node._controllers_listed(controllers(False))
+                node.gate = (4, 1, 1, 0)
+            if len(waits) == 4:
+                node.on_joint_state(JointState(name=['arm_3_joint'], position=[0.0]))
+            assert predicate()
+            return True
+
+        node._wait_for = wait_for
+        response = asyncio.run(node.set_joint_zero(
+            'arm_3_joint', Trigger.Request(), Trigger.Response()))
+        assert response.success == success
+        assert node.calibration_paused
+        assert not node.calibration_busy
+        assert node.calibration_verified == success
+        node.zero_clients['arm_3_joint'].call_async.assert_called_once()
+        node.release_publisher.publish.assert_not_called()
+
+
+def test_zero_workflow_does_not_send_can_request_if_stop_unconfirmed():
+    import asyncio
+    from std_srvs.srv import Trigger
+    node = manager()
+    node.zero_clients = {'arm_3_joint': Mock()}
+
+    async def wait_for(predicate, timeout):
+        return False
+
+    node._wait_for = wait_for
+    response = asyncio.run(node.set_joint_zero(
+        'arm_3_joint', Trigger.Request(), Trigger.Response()))
+    assert not response.success
+    assert node.calibration_paused
+    node.zero_clients['arm_3_joint'].call_async.assert_not_called()
