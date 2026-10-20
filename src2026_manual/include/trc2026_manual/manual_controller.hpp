@@ -66,6 +66,12 @@ private:
   double arm_4_position_target_ = 0.0;
   double arm_123_position_rate_ = 0.5;
   double arm_position_trajectory_duration_ = 0.1;
+  double arm_123_max_tracking_error_ = 0.1;
+  double arm_2_max_tracking_error_ = 0.2;
+  std::array<double, 3> arm_123_actual_positions_{};
+  std::array<rclcpp::Time, 3> arm_123_feedback_times_{{
+    rclcpp::Time(0, 0, RCL_ROS_TIME), rclcpp::Time(0, 0, RCL_ROS_TIME),
+    rclcpp::Time(0, 0, RCL_ROS_TIME)}};
   std::vector<double> arm_123_position_targets_{0.0, 0.0, 0.0};
   bool arm_position_targets_initialized_ = false;
   std::array<bool, 3> position_hardware_healthy_{};

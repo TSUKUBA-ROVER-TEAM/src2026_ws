@@ -55,6 +55,8 @@ ManualController::ManualController(const rclcpp::NodeOptions & options)
   this->declare_parameter("arm_4_position_rate", 10.0);
   this->declare_parameter("arm_123_position_rate", 0.5);
   this->declare_parameter("arm_position_trajectory_duration", 0.1);
+  this->declare_parameter("arm_123_max_tracking_error", 0.1);
+  this->declare_parameter("arm_2_max_tracking_error", 0.2);
   this->declare_parameter("gripper_velocity_scale", 5000.0);
   this->declare_parameter("deadzone", 0.01);
   this->declare_parameter("joy_timeout", 0.5);
@@ -78,6 +80,14 @@ ManualController::ManualController(const rclcpp::NodeOptions & options)
   this->get_parameter("arm_4_position_rate", arm_4_position_rate_);
   this->get_parameter("arm_123_position_rate", arm_123_position_rate_);
   this->get_parameter("arm_position_trajectory_duration", arm_position_trajectory_duration_);
+  this->get_parameter("arm_123_max_tracking_error", arm_123_max_tracking_error_);
+  if (!std::isfinite(arm_123_max_tracking_error_) || arm_123_max_tracking_error_ <= 0.0) {
+    throw std::invalid_argument("arm_123_max_tracking_error must be finite and positive");
+  }
+  this->get_parameter("arm_2_max_tracking_error", arm_2_max_tracking_error_);
+  if (!std::isfinite(arm_2_max_tracking_error_) || arm_2_max_tracking_error_ <= 0.0) {
+    throw std::invalid_argument("arm_2_max_tracking_error must be finite and positive");
+  }
   if (!std::isfinite(arm_position_trajectory_duration_) || arm_position_trajectory_duration_ <= 0.0) {
     throw std::invalid_argument("arm_position_trajectory_duration must be finite and positive");
   }
@@ -161,8 +171,21 @@ void ManualController::publish_timer_callback()
       position_hardware_healthy_[selected_arm_123_joint_] &&
       !resync_position_targets_[selected_arm_123_joint_] &&
       position_sync_hold_[selected_arm_123_joint_] == 0) {
-      arm_123_position_targets_[selected_arm_123_joint_] +=
-        arm_123_axis_command_ * arm_123_position_rate_ * period_sec;
+      const auto index = static_cast<size_t>(selected_arm_123_joint_);
+      const auto feedback_age =
+        (this->now() - arm_123_feedback_times_[index]).seconds();
+      if (feedback_age >= 0.0 && feedback_age <= 0.5) {
+        auto & target = arm_123_position_targets_[index];
+        const double actual = arm_123_actual_positions_[index];
+        const double max_tracking_error =
+          index == 1 ? arm_2_max_tracking_error_ : arm_123_max_tracking_error_;
+        const double step = arm_123_axis_command_ * arm_123_position_rate_ * period_sec;
+        if (step > 0.0) {
+          target += std::min(step, std::max(0.0, actual + max_tracking_error - target));
+        } else if (step < 0.0) {
+          target += std::max(step, std::min(0.0, actual - max_tracking_error - target));
+        }
+      }
     }
     cmd_vel_publisher_->publish(last_cmd_vel_);
   } else {
@@ -210,8 +233,12 @@ void ManualController::joint_state_callback(const sensor_msgs::msg::JointState::
     arm_position_targets_initialized_ = true;
   }
   for (size_t index = 0; index < 3; ++index) {
-    if (position_hardware_healthy_[index] && resync_position_targets_[index] &&
-      find_position("arm_" + std::to_string(index + 1) + "_joint", position)) {
+    if (!find_position("arm_" + std::to_string(index + 1) + "_joint", position)) {
+      continue;
+    }
+    arm_123_actual_positions_[index] = position;
+    arm_123_feedback_times_[index] = this->now();
+    if (position_hardware_healthy_[index] && resync_position_targets_[index]) {
       arm_123_position_targets_[index] = position;
       resync_position_targets_[index] = false;
       position_sync_hold_[index] = 2;

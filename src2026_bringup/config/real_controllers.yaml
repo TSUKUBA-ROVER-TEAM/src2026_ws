@@ -17,7 +17,7 @@ arm_position_controller:
     state_interfaces: [position]
     allow_partial_joints_goal: false
     set_last_command_interface_value_as_state_on_activation: false
-    interpolate_from_desired_state: false
+    interpolate_from_desired_state: true
     interpolation_method: splines
 
 arm_velocity_controller:
