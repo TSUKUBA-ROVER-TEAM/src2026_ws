@@ -88,11 +88,12 @@
         <param name="run_mode_recovery_timeout_ms">5000</param>
       </hardware>
       <joint name="arm_1_joint">
-        <xacro:robstride_rs02_params can_id="16" kp="30.0" kd="1.0"/>
+        <!-- Skip CAN timeout setup: this motor returns status 1 for index 0x7028. -->
+        <xacro:robstride_rs03_params can_id="3" kp="30.0" kd="1.0" can_timeout_ticks="0"/>
         <xacro:robstride_joint_interfaces/>
       </joint>
       <joint name="arm_2_joint">
-        <xacro:robstride_rs02_params can_id="17" kp="30.0" kd="1.0"/>
+        <xacro:robstride_rs04_params can_id="2" kp="30.0" kd="1.0"/>
         <xacro:robstride_joint_interfaces/>
       </joint>
       <joint name="arm_3_joint">
