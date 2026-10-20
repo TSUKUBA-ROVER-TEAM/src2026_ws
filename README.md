@@ -18,8 +18,9 @@ Robomas基板IDの既定値は3、PCのインターフェースは`can0`です�
 U5のRobomasはmodule ID 5〜8、DaMiaoは13〜15です。`arm_4_joint`はDaMiao ID1
 (module ID 13)、`gripper_joint`はRobomas ID1 (module ID 5)、`arm_y_joint`はRobomas ID2
 (module ID 6)に割り当てています。
-arm操作はforward command controllerで、`arm_4_joint`を位置制御、`arm_y_joint`と
-`gripper_joint`を速度制御します。位置指令はaxisを押している間に積算します。
+arm_1〜4 の位置制御には標準 `joint_trajectory_controller/JointTrajectoryController`、
+`arm_y_joint` と `gripper_joint` の速度制御には ForwardCommandController を使います。
+位置指令は axis を押している間に積算します。
 `arm_4_joint`はaxes[2]を正方向、axes[5]を負方向に使います。未押下の値1.0を基準に
 押下量を速度へ変換します。`gripper_joint`はbutton[4]/button[5]で正負に動き、速度は30です。
 
@@ -167,3 +168,40 @@ CI では ROS 2 Jazzy 環境で依存関係のインストール、フォーマ�
 
 - パッケージ名
 - `build_depends.repos` の依存リポジトリ
+
+## RobStride 単体試験
+
+RobStride だけを接続する場合は、ITR 側を mock hardware に切り替えます。
+このモードでは足回り・arm_y・arm_4・gripper の実機 CAN 送信を行いません。
+RobStride の設定対象は arm_1〜3 のままで、arm_3 だけの接続でも操作できます。
+
+```bash
+just run real robstride_only:=true
+```
+
+arm_3 は `buttons[3]` を押しながら `axes[7]` で操作します。
+`arm_position_controller` は標準 JointTrajectoryController で、位置 Command / State Interface を使います。
+Recovery Manager が送る軌道点の位置は arm_1〜4 の4要素の有限値です。
+未接続の RobStride 軸への送信停止は Hardware 側で行います。
+
+通常の電源断・CAN通信断では RobStride Hardware を ACTIVE のまま保ちます。
+一度 ready になった軸が落ちた場合、共有の `arm_position_controller` は全軸停止し、
+通信復帰・指令位置の実測位置への同期・Controller 再 activate 後に再開します。
+初めから未接続の軸は単体試験の起動を妨げません。
+
+外部位置指令は `/arm_position_controller/position_targets` に `trajectory_msgs/JointTrajectory`
+で送ります。`joint_names` は arm_1〜4 の順、`points[].positions` は絶対位置です。
+`header.stamp` には指令作成時点の現在の ROS 時刻を入れ、その時刻から軌道を開始します。
+`points[].time_from_start` に各点への到達時間を指定します。manual_controller は通常、
+0.1秒後の目標位置を1点送ります（`arm_position_trajectory_duration` で変更可能）。
+多点軌道も受け付けます。各点の到達時間は非負・昇順、位置などの値は有限値にします。
+作成時刻が判別できないゼロ stamp、未来の開始 stamp、終了時刻を過ぎた軌道は受け付けません。
+`/arm_position_controller/recovery_ready` が true になった後の新しい指令だけを受け付けます。
+復旧前・復旧中の指令は再送せず、現在位置から作り直してください。
+`/arm_position_controller/joint_trajectory` への直接送信は Recovery Manager 専用です。
+Controller の action への直接送信も Recovery Manager の旧指令破棄を迂回するため使用しません。
+
+Hardware 自体が ERROR になった場合は、Recovery Manager が既存 Lifecycle サービスで
+configure → activate し、同時に停止した `joint_state_broadcaster` も再 activate します。
+Driver は再 activate 時に古い Interface 使用状態と位置指令を消し、実測位置への同期を
+最初からやり直します。電源が戻るまでは位置指令ゲートを閉じたまま待機します。

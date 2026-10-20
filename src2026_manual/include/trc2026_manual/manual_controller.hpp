@@ -3,11 +3,15 @@
 
 #include "trc2026_manual/base_manual_controller.hpp"
 
+#include <array>
 #include <string>
 #include <vector>
 
 #include "geometry_msgs/msg/twist.hpp"
+#include "sensor_msgs/msg/joint_state.hpp"
+#include "trajectory_msgs/msg/joint_trajectory.hpp"
 #include "std_msgs/msg/float64_multi_array.hpp"
+#include "std_msgs/msg/bool.hpp"
 
 namespace trc2026_manual
 {
@@ -21,15 +25,25 @@ public:
 private:
   void joy_callback(const sensor_msgs::msg::Joy::SharedPtr msg) override;
   void publish_timer_callback();
+  void joint_state_callback(const sensor_msgs::msg::JointState::SharedPtr msg);
+  void health_callback(const std_msgs::msg::Float64MultiArray::SharedPtr msg);
 
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_publisher_;
   rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr arm_velocity_publisher_;
-  rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr arm_position_publisher_;
+  rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr arm_position_publisher_;
+  rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr recovery_subscription_;
+  bool recovery_ready_ = false;
   rclcpp::TimerBase::SharedPtr publish_timer_;
+  rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_state_subscription_;
+  rclcpp::Subscription<std_msgs::msg::Float64MultiArray>::SharedPtr health_subscription_;
 
   int arm_y_axis_ = 6;
   int arm_4_positive_axis_ = 2;
   int arm_4_negative_axis_ = 5;
+  int arm_123_axis_ = 7;
+  int arm_1_button_ = 1;
+  int arm_2_button_ = 2;
+  int arm_3_button_ = 3;
   double arm_y_velocity_scale_ = 20000.0;
   double arm_4_position_rate_ = 0.5;
   double gripper_velocity_scale_ = 30.0;
@@ -50,6 +64,16 @@ private:
   double arm_4_axis_command_ = 0.0;
   double gripper_velocity_command_ = 0.0;
   double arm_4_position_target_ = 0.0;
+  double arm_123_position_rate_ = 0.5;
+  double arm_position_trajectory_duration_ = 0.1;
+  std::vector<double> arm_123_position_targets_{0.0, 0.0, 0.0};
+  bool arm_position_targets_initialized_ = false;
+  std::array<bool, 3> position_hardware_healthy_{};
+  std::array<bool, 3> resync_position_targets_{{true, true, true}};
+  std::array<int, 3> position_sync_hold_{};
+  rclcpp::Time last_health_time_{0, 0, RCL_ROS_TIME};
+  double arm_123_axis_command_ = 0.0;
+  int selected_arm_123_joint_ = -1;
 };
 
 }  // namespace trc2026_manual

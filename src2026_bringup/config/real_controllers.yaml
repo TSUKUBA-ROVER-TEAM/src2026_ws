@@ -6,14 +6,19 @@ controller_manager:
     itr_swerve_controller:
       type: itr_swerve_controller/ITRSwerveController
     arm_position_controller:
-      type: forward_command_controller/ForwardCommandController
+      type: joint_trajectory_controller/JointTrajectoryController
     arm_velocity_controller:
       type: forward_command_controller/ForwardCommandController
 
 arm_position_controller:
   ros__parameters:
-    joints: [arm_4_joint]
-    interface_name: position
+    joints: [arm_1_joint, arm_2_joint, arm_3_joint, arm_4_joint]
+    command_interfaces: [position]
+    state_interfaces: [position]
+    allow_partial_joints_goal: false
+    set_last_command_interface_value_as_state_on_activation: false
+    interpolate_from_desired_state: false
+    interpolation_method: splines
 
 arm_velocity_controller:
   ros__parameters:

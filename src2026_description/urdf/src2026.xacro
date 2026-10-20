@@ -4,6 +4,7 @@
 
   <xacro:arg name="use_fake_hardware" default="false" />
   <xacro:arg name="use_real_hardware" default="false" />
+  <xacro:arg name="robstride_only" default="false" />
   <xacro:arg name="can_interface" default="can0" />
   <xacro:arg name="drive_gear_ratio" default="19.0" />
   <xacro:arg name="robomas_board_id" default="3" />

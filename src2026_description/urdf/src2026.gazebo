@@ -75,9 +75,40 @@
   </xacro:unless>
 
   <xacro:if value="$(arg use_real_hardware)">
+    <xacro:include filename="$(find robstride_ros2_control)/description/robstride_motor_profiles.xacro"/>
+    <ros2_control name="RobStrideSystem" type="system">
+      <hardware>
+        <plugin>robstride_ros2/RobStrideSystem</plugin>
+        <param name="feedback_timeout_ms">500</param>
+        <param name="fail_on_feedback_timeout">true</param>
+        <param name="allow_partial_start">true</param>
+        <param name="managed_command_gate">true</param>
+        <param name="set_zero_on_activate">false</param>
+        <param name="startup_recovery_timeout_ms">5000</param>
+        <param name="run_mode_recovery_timeout_ms">5000</param>
+      </hardware>
+      <joint name="arm_1_joint">
+        <xacro:robstride_rs02_params can_id="16" kp="30.0" kd="1.0"/>
+        <xacro:robstride_joint_interfaces/>
+      </joint>
+      <joint name="arm_2_joint">
+        <xacro:robstride_rs02_params can_id="17" kp="30.0" kd="1.0"/>
+        <xacro:robstride_joint_interfaces/>
+      </joint>
+      <joint name="arm_3_joint">
+        <xacro:robstride_rs02_params can_id="4" kp="30.0" kd="1.0"/>
+        <xacro:robstride_joint_interfaces/>
+      </joint>
+    </ros2_control>
+
     <ros2_control name="ITRSwerveSystem" type="system">
       <hardware>
-        <plugin>itr_can_hardware/ItrCanHardware</plugin>
+        <xacro:if value="$(arg robstride_only)">
+          <plugin>mock_components/GenericSystem</plugin>
+        </xacro:if>
+        <xacro:unless value="$(arg robstride_only)">
+          <plugin>itr_can_hardware/ItrCanHardware</plugin>
+        </xacro:unless>
         <param name="can_interface">$(arg can_interface)</param>
       </hardware>
 
