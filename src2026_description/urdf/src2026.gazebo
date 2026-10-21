@@ -90,14 +90,20 @@
       <joint name="arm_1_joint">
         <!-- Skip CAN timeout setup: this motor returns status 1 for index 0x7028. -->
         <xacro:robstride_rs03_params can_id="3" kp="30.0" kd="0.5" can_timeout_ticks="0"/>
+        <xacro:robstride_csp_params position_min="-20.0" position_max="20.0"
+          speed_limit="0.5" current_limit="1.0" torque_limit="2.0"/>
         <xacro:robstride_joint_interfaces/>
       </joint>
       <joint name="arm_2_joint">
         <xacro:robstride_rs04_params can_id="2" kp="50.0" kd="0.5"/>
+        <xacro:robstride_csp_params position_min="-12.466370614359172" position_max="12.466370614359172"
+          speed_limit="0.5" current_limit="1.0" torque_limit="2.0"/>
         <xacro:robstride_joint_interfaces/>
       </joint>
       <joint name="arm_3_joint">
         <xacro:robstride_rs02_params can_id="4" kp="30.0" kd="0.5"/>
+        <xacro:robstride_csp_params position_min="-12.466370614359172" position_max="12.466370614359172"
+          speed_limit="0.5" current_limit="1.0" torque_limit="2.0"/>
         <xacro:robstride_joint_interfaces/>
       </joint>
     </ros2_control>

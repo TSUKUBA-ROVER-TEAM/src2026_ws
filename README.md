@@ -130,13 +130,15 @@ just clean
 
 ## アームの位置指令範囲
 
-manual_controllerの`arm_123_position_min` / `arm_123_position_max`は、arm_1〜3の
-順で位置目標の上下限を指定します。現在の既定値は各軸±12.466370614 radで、
-現在の`gear_ratio=1.0`・オフセット0のCAN位置範囲±4πから0.10 rad内側です。
+位置目標の絶対上下限はドライバ側にまとめています。
+`src2026_description/urdf/src2026.gazebo`のCSP範囲はarm_1が
+−15.0〜＋12.466370614 rad、arm_2/3が±12.466370614 radです。
 これは機械的な可動域の校正値ではありません。原点・減速比の変更時には、
-同じ関節座標系で上下限も設定し直してください。
+同じ座標系で上下限も設定し直してください。
 
-限界に達すると、その方向への目標の積み増しだけを停止します。
+manual_controllerには絶対位置の上下限を持たせず、実位置から離れる方向への
+目標の積み増しを偏差制限で抑えます（arm_1/3は0.1 rad、arm_2は0.2 rad）。
+偏差制限に達すると、その方向への目標の積み増しだけを停止します。
 逆操作は受け付け、限界到達時に目標を実角度や反対端へ飛ばしません。
 ドライバへ範囲外の位置指令が到達しても、最後の有効な位置目標で保持し、
 位置範囲超過だけを理由に全モータの保持を解除しません。
@@ -262,3 +264,36 @@ Hardware 自体が ERROR になった場合は、Recovery Manager が既存 Life
 configure → activate し、同時に停止した `joint_state_broadcaster` も再 activate します。
 Driver は再 activate 時に古い Interface 使用状態と位置指令を消し、実測位置への同期を
 最初からやり直します。電源が戻るまでは位置指令ゲートを閉じたまま待機します。
+
+## RobStrideアームのCSP制御
+
+arm_1〜3は通常起動でCSPを使います。RS03 / CAN ID 3、RS04 / CAN ID 2、
+RS02 / CAN ID 4の対応はそのままです。CSP用のlaunch引数はありません。
+JTCのposition指令もそのまま使います。
+
+```bash
+ros2 launch src2026_bringup real.launch.yaml robstride_only:=true
+```
+
+各軸のCSP設定は`src2026_description/urdf/src2026.gazebo`の
+`robstride_csp_params`に置いています。位置範囲はarm_1が−15.0〜＋12.466370614 rad、
+arm_2/3が±12.466370614 radです。manual_controllerは絶対位置の範囲を持たず、
+動かない間に目標を積み上げないための偏差制限だけを持ちます。
+位置・速度・トルクの単位は各モータ出力軸基準で、外部減速比は今回変更していません。
+
+検証用の初期値は各軸とも速度0.5 rad/s、電流1.0 A、トルク2.0 Nmです。
+モータ・負荷が異なるので、今後の調整は軸別に行います。この制限では
+持ち上がらない場合があります。CSPは既存のモータ内部CSPゲインを保持し、
+運動制御のKp/Kdは使いません。arm_1の−4πを越える追従とmechPosの連続性は
+実機bagで確認済みです。arm_2/3のCSP動作・ゲインは実機で別途確認してください。
+
+`/dynamic_joint_states`の各軸の`motor_position`（mechPos）と
+`motor_position_wrapped`（通常フィードバック）を比較できます。
+`/joint_states`のpositionはmechPos由来です。各軸のmechPosは50 Hzを上限に読み出し、
+100 ms以上古い場合はreadyを落として再同期を要求します。折り返した通常角度への
+自動切替は行いません。異常なmechPosのジャンプを検出すると復帰を禁止するため、
+値を確認してからhardwareを再アクティブ化してください。
+範囲外の指令は最後の正常目標を保持します。電源復帰時は旧目標を再利用せず、
+現在位置を読み直して既存のstop/sync/start手順を通します。
+初期化・停止・復帰・原点合わせ中は電流0またはStopになるため、
+これらの操作はアームを支持した状態で行ってください。
