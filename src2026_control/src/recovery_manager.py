@@ -432,7 +432,8 @@ class RecoveryManager(Node):
                 return response
             self.calibration_verified = True
             response.success = True
-            response.message = (joint + ' zero confirmed. Arm remains paused; '
+            response.message = (joint + ' zero confirmed and parameter save requested. '
+                                'Verify after power cycle. Arm remains paused; '
                                 'call /arm_calibration/resume to resynchronize and resume.')
             return response
         except Exception as error:
