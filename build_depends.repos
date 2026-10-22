@@ -2,11 +2,11 @@ repositories:
     dep/itr_control:
         type: git
         url: https://github.com/tsukurobo/itr_control.git
-        version: f8a389fc59a35a29cbc56fd3ceb013dfd56d572a
+        version: feature/add-damiao
     dep/itr_can_protocol:
         type: git
         url: https://github.com/tsukurobo/itr_can_protocol.git
-        version: 736b8baf9c19593acb71cb06399d4fde97306861
+        version: main
     dep/itr_msgs:
         type: git
         url: https://github.com/tsukurobo/itr_msgs.git
