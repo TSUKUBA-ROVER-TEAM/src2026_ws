@@ -75,9 +75,15 @@
   </xacro:unless>
 
   <xacro:if value="$(arg use_real_hardware)">
-    <xacro:include filename="$(find robstride_ros2_control)/description/robstride_motor_profiles.xacro"/>
+    <xacro:unless value="$(arg drive_only)">
+      <xacro:include filename="$(find robstride_ros2_control)/description/robstride_motor_profiles.xacro"/>
+    </xacro:unless>
     <ros2_control name="RobStrideSystem" type="system">
       <hardware>
+        <xacro:if value="$(arg drive_only)">
+          <plugin>mock_components/GenericSystem</plugin>
+        </xacro:if>
+        <xacro:unless value="$(arg drive_only)">
         <plugin>robstride_ros2/RobStrideSystem</plugin>
         <param name="feedback_timeout_ms">500</param>
         <param name="fail_on_feedback_timeout">true</param>
@@ -86,7 +92,9 @@
         <param name="set_zero_on_activate">false</param>
         <param name="startup_recovery_timeout_ms">5000</param>
         <param name="run_mode_recovery_timeout_ms">5000</param>
+        </xacro:unless>
       </hardware>
+      <xacro:unless value="$(arg drive_only)">
       <joint name="arm_1_joint">
         <!-- Skip CAN timeout setup: this motor returns status 1 for index 0x7028. -->
         <xacro:robstride_rs03_params can_id="3" kp="30.0" kd="0.5" can_timeout_ticks="0"/>
@@ -106,17 +114,30 @@
           speed_limit="0.5" current_limit="1.0" torque_limit="2.0"/>
         <xacro:robstride_joint_interfaces/>
       </joint>
+      </xacro:unless>
+      <xacro:if value="$(arg drive_only)">
+        <xacro:macro name="mock_robstride_joint" params="name">
+          <joint name="${name}">
+            <command_interface name="position" />
+            <state_interface name="position" />
+            <state_interface name="velocity" />
+          </joint>
+        </xacro:macro>
+        <xacro:mock_robstride_joint name="arm_1_joint" />
+        <xacro:mock_robstride_joint name="arm_2_joint" />
+        <xacro:mock_robstride_joint name="arm_3_joint" />
+      </xacro:if>
     </ros2_control>
 
     <ros2_control name="ITRSwerveSystem" type="system">
       <hardware>
-        <xacro:if value="$(arg robstride_only)">
+        <xacro:if value="${xacro.arg('arm_only') in ['true', 'True', '1'] and xacro.arg('drive_only') not in ['true', 'True', '1']}">
           <plugin>mock_components/GenericSystem</plugin>
         </xacro:if>
-        <xacro:unless value="$(arg robstride_only)">
+        <xacro:unless value="${xacro.arg('arm_only') in ['true', 'True', '1'] and xacro.arg('drive_only') not in ['true', 'True', '1']}">
           <plugin>itr_can_hardware/ItrCanHardware</plugin>
         </xacro:unless>
-        <param name="can_interface">$(arg can_interface)</param>
+        <param name="can_interface">$(arg itr_can_interface)</param>
       </hardware>
 
       <xacro:macro name="robomas_wheel" params="joint module_id">

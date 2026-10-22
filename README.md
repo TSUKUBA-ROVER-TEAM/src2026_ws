@@ -28,14 +28,14 @@ arm_1〜4 の位置制御には標準 `joint_trajectory_controller/JointTrajecto
 source /opt/ros/jazzy/setup.bash
 colcon build --symlink-install --packages-up-to src2026_bringup
 source install/setup.bash
-ros2 launch src2026_bringup real.launch.yaml can_interface:=can0 robomas_board_id:=3
+ros2 launch src2026_bringup real.launch.yaml itr_can_interface:=can0 robstride_can_interface:=can1
 ```
 
 実機launchは足回りのcontrollerとジョイスティック操作ノードを起動します。
 1軸ずつ確認する場合は、controllerをinactiveで読み込む次のlaunchを使います。
 
 ```bash
-ros2 launch src2026_bringup actuator_test.launch.yaml robomas_board_id:=3
+ros2 launch src2026_bringup actuator_test.launch.yaml itr_can_interface:=can0
 ```
 
 CAN FD・BRSなし・1 Mbpsの上位通信と、命令8のページ形式フィードバックに
@@ -228,6 +228,10 @@ CI では ROS 2 Jazzy 環境で依存関係のインストール、フォーマ�
 - パッケージ名
 - `build_depends.repos` の依存リポジトリ
 
+実機 launch の CAN 接続先は `itr_can_interface`（既定 `can0`）と
+`robstride_can_interface`（既定 `can1`）で個別に指定します。
+減速比・基板 ID・モジュール ID は Xacro の設定を使います。
+
 ## RobStride 単体試験
 
 RobStride だけを接続する場合は、ITR 側を mock hardware に切り替えます。
@@ -235,7 +239,16 @@ RobStride だけを接続する場合は、ITR 側を mock hardware に切り替
 RobStride の設定対象は arm_1〜3 のままで、arm_3 だけの接続でも操作できます。
 
 ```bash
-just run real robstride_only:=true
+just run real arm_only:=true
+```
+
+ITR のみを接続する場合は `drive_only` を指定します。RobStride は mock hardware に切り替わり、
+RobStride 用 CAN ブリッジ・Hardware spawner・Recovery Manager は起動しません。
+ITR 側の足回り・arm_y・arm_4・gripper は実機のままです。
+両方を指定した場合は `drive_only` が優先されます。
+
+```bash
+just run real drive_only:=true
 ```
 
 arm_3 は `buttons[3]` を押しながら `axes[7]` で操作します。
@@ -272,7 +285,7 @@ RS02 / CAN ID 4の対応はそのままです。CSP用のlaunch引数はあり�
 JTCのposition指令もそのまま使います。
 
 ```bash
-ros2 launch src2026_bringup real.launch.yaml robstride_only:=true
+ros2 launch src2026_bringup real.launch.yaml arm_only:=true
 ```
 
 各軸のCSP設定は`src2026_description/urdf/src2026.gazebo`の

@@ -1,20 +1,8 @@
 launch:
   - arg:
-      name: can_interface
+      name: itr_can_interface
       default: can0
       description: SocketCAN interface used by itr_can_hardware
-  - arg:
-      name: drive_gear_ratio
-      default: '19.0'
-      description: Robomas motor rotations per wheel rotation
-  - arg:
-      name: robomas_board_id
-      default: '3'
-      description: CAN board ID for the four Robomas drive modules
-  - arg:
-      name: servo_board_id
-      default: '1'
-      description: CAN board ID for the four steering servo modules
 
   - node:
       pkg: controller_manager
@@ -23,7 +11,7 @@ launch:
       output: screen
       param:
         - name: robot_description
-          value: $(command 'xacro $(find-pkg-share src2026_description)/urdf/src2026.xacro use_real_hardware:=true can_interface:=$(var can_interface) drive_gear_ratio:=$(var drive_gear_ratio) robomas_board_id:=$(var robomas_board_id) servo_board_id:=$(var servo_board_id)')
+          value: $(command 'xacro $(find-pkg-share src2026_description)/urdf/src2026.xacro use_real_hardware:=true itr_can_interface:=$(var itr_can_interface)')
         - from: $(find-pkg-share src2026_bringup)/config/actuator_test_controllers.yaml
 
   - node:
@@ -33,7 +21,7 @@ launch:
       output: screen
       param:
         - name: robot_description
-          value: $(command 'xacro $(find-pkg-share src2026_description)/urdf/src2026.xacro use_real_hardware:=true can_interface:=$(var can_interface) drive_gear_ratio:=$(var drive_gear_ratio) robomas_board_id:=$(var robomas_board_id) servo_board_id:=$(var servo_board_id)')
+          value: $(command 'xacro $(find-pkg-share src2026_description)/urdf/src2026.xacro use_real_hardware:=true itr_can_interface:=$(var itr_can_interface)')
 
   - node:
       pkg: controller_manager

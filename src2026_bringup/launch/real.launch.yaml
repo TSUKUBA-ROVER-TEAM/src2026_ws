@@ -1,28 +1,21 @@
 launch:
   - arg:
-      name: robstride_only
+      name: arm_only
       default: 'false'
       description: Use real RobStride motors and mock all ITR joints without sending ITR CAN FD traffic
   - arg:
-      name: can_interface
+      name: drive_only
+      default: 'false'
+      description: Use real ITR hardware and mock RobStride motors; takes precedence over arm_only
+  - arg:
+      name: itr_can_interface
       default: can0
       description: SocketCAN interface used by itr_can_hardware
+
   - arg:
-      name: drive_gear_ratio
-      default: '19.0'
-      description: Robomas motor rotations per wheel rotation
-  - arg:
-      name: robomas_board_id
-      default: '3'
-      description: CAN board ID for the four Robomas drive modules
-  - arg:
-      name: arm_y_module_id
-      default: '6'
-      description: Robomas module ID for arm_y_joint (6 is U5 ESC ID 2)
-  - arg:
-      name: servo_board_id
-      default: '1'
-      description: CAN board ID for the four steering servo modules
+      name: robstride_can_interface
+      default: can1
+      description: SocketCAN interface used by the RobStride bridge
 
   - node:
       pkg: controller_manager
@@ -31,7 +24,7 @@ launch:
       output: screen
       param:
         - name: robot_description
-          value: $(command 'xacro $(find-pkg-share src2026_description)/urdf/src2026.xacro use_real_hardware:=true robstride_only:=$(var robstride_only) can_interface:=$(var can_interface) drive_gear_ratio:=$(var drive_gear_ratio) robomas_board_id:=$(var robomas_board_id) arm_y_module_id:=$(var arm_y_module_id) servo_board_id:=$(var servo_board_id)')
+          value: $(command 'xacro $(find-pkg-share src2026_description)/urdf/src2026.xacro use_real_hardware:=true arm_only:=$(var arm_only) drive_only:=$(var drive_only) itr_can_interface:=$(var itr_can_interface)')
         - from: $(find-pkg-share src2026_bringup)/config/real_controllers.yaml
 
   - node:
@@ -41,7 +34,7 @@ launch:
       output: screen
       param:
         - name: robot_description
-          value: $(command 'xacro $(find-pkg-share src2026_description)/urdf/src2026.xacro use_real_hardware:=true robstride_only:=$(var robstride_only) can_interface:=$(var can_interface) drive_gear_ratio:=$(var drive_gear_ratio) robomas_board_id:=$(var robomas_board_id) arm_y_module_id:=$(var arm_y_module_id) servo_board_id:=$(var servo_board_id)')
+          value: $(command 'xacro $(find-pkg-share src2026_description)/urdf/src2026.xacro use_real_hardware:=true arm_only:=$(var arm_only) drive_only:=$(var drive_only) itr_can_interface:=$(var itr_can_interface)')
 
   - node:
       pkg: controller_manager
@@ -51,10 +44,11 @@ launch:
       args: joint_state_broadcaster -c /controller_manager
 
   - include:
+      unless: $(var drive_only)
       file: $(find-pkg-share ros2_socketcan)/launch/socket_can_bridge.launch.xml
       arg:
         - name: interface
-          value: $(var can_interface)
+          value: $(var robstride_can_interface)
         - name: receiver_interval_sec
           value: '0.05'
 
@@ -62,6 +56,7 @@ launch:
       pkg: controller_manager
       exec: hardware_spawner
       name: robstride_hardware_spawner
+      unless: $(var drive_only)
       output: screen
       args: RobStrideSystem --controller-manager /controller_manager --activate
 
@@ -69,6 +64,7 @@ launch:
       pkg: controller_manager
       exec: spawner
       name: arm_position_controller_spawner
+      unless: $(var drive_only)
       output: screen
       args: arm_position_controller -c /controller_manager --inactive
 
@@ -93,4 +89,5 @@ launch:
       pkg: src2026_control
       exec: recovery_manager.py
       name: robstride_recovery_manager
+      unless: $(var drive_only)
       output: screen
