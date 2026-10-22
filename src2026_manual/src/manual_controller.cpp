@@ -53,7 +53,7 @@ ManualController::ManualController(const rclcpp::NodeOptions & options)
   this->declare_parameter("gripper_negative_button", 5);
   this->declare_parameter("arm_y_velocity_scale", 20000.0);
   this->declare_parameter("arm_4_position_rate", 10.0);
-  this->declare_parameter("arm_123_position_rate", 0.5);
+  this->declare_parameter("arm_123_position_rates", std::vector<double>{1.0, 0.1, 0.5});
   this->declare_parameter("arm_position_trajectory_duration", 0.1);
   this->declare_parameter("arm_123_max_tracking_error", 0.1);
   this->declare_parameter("arm_2_max_tracking_error", 0.2);
@@ -78,7 +78,13 @@ ManualController::ManualController(const rclcpp::NodeOptions & options)
   this->get_parameter("gripper_negative_button", gripper_negative_button_);
   this->get_parameter("arm_y_velocity_scale", arm_y_velocity_scale_);
   this->get_parameter("arm_4_position_rate", arm_4_position_rate_);
-  this->get_parameter("arm_123_position_rate", arm_123_position_rate_);
+  this->get_parameter("arm_123_position_rates", arm_123_position_rates_);
+  if (arm_123_position_rates_.size() != 3 ||
+    std::any_of(arm_123_position_rates_.begin(), arm_123_position_rates_.end(),
+      [](double rate) {return !std::isfinite(rate) || rate <= 0.0;}))
+  {
+    throw std::invalid_argument("arm_123_position_rates must contain three finite positive values");
+  }
   this->get_parameter("arm_position_trajectory_duration", arm_position_trajectory_duration_);
   this->get_parameter("arm_123_max_tracking_error", arm_123_max_tracking_error_);
   if (!std::isfinite(arm_123_max_tracking_error_) || arm_123_max_tracking_error_ <= 0.0) {
@@ -179,7 +185,7 @@ void ManualController::publish_timer_callback()
         const double actual = arm_123_actual_positions_[index];
         const double max_tracking_error =
           index == 1 ? arm_2_max_tracking_error_ : arm_123_max_tracking_error_;
-        const double step = arm_123_axis_command_ * arm_123_position_rate_ * period_sec;
+        const double step = arm_123_axis_command_ * arm_123_position_rates_[index] * period_sec;
         if (step > 0.0) {
           const double upper = actual + max_tracking_error;
           target += std::min(step, std::max(0.0, upper - target));
