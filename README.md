@@ -30,9 +30,11 @@ just run real use_odrive_launcher:=true
 ```bash
 just run real arm_only:=true     # RobStrideのみ実機、ITRはモック
 just run real drive_only:=true   # ITRのみ実機、RobStrideはモック
+just run real launcher_only:=true # ODrive＋ゲームパッド操作のみ
 just run odrive_test             # ODrive単体、ゲームパッド操作なし
 ```
 
+`launcher_only` は他の単体試験モードより優先され、ODriveを自動で有効化します。
 `arm_only` と `drive_only` は `drive_only` が優先されます。
 ODriveは `use_odrive_launcher` で個別に有効化します。
 
