@@ -15,3 +15,7 @@ repositories:
         type: git
         url: https://github.com/Kengokuma/robstride_ros2.git
         version: main
+    dep/ros_odrive:
+        type: git
+        url: https://github.com/tsukurobo/ros_odrive.git
+        version: main

@@ -20,6 +20,9 @@ rclcpp_components_register_node(manual_controller
 install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
 
 if(BUILD_TESTING)
+  find_package(ament_cmake_gtest REQUIRED)
+  ament_add_gtest(test_launcher_trigger test/test_launcher_trigger.cpp)
+  target_include_directories(test_launcher_trigger PRIVATE include)
   find_package(ament_lint_auto REQUIRED)
   set(ament_cmake_copyright_FOUND TRUE)
   set(ament_cmake_cpplint_FOUND TRUE)

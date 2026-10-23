@@ -4,6 +4,10 @@
 
   <xacro:arg name="use_fake_hardware" default="false" />
   <xacro:arg name="use_real_hardware" default="false" />
+  <xacro:arg name="enable_robot_hardware" default="true" />
+  <xacro:arg name="use_odrive_launcher" default="false" />
+  <xacro:arg name="odrive_can_interface" default="can1" />
+  <xacro:arg name="odrive_node_id" default="0" />
   <xacro:arg name="arm_only" default="false" />
   <xacro:arg name="drive_only" default="false" />
   <xacro:arg name="itr_can_interface" default="can0" />
@@ -15,6 +19,14 @@
   <xacro:include filename="$(find src2026_description)/urdf/materials.xacro" />
   <xacro:include filename="$(find src2026_description)/urdf/src2026.trans" />
   <xacro:include filename="$(find src2026_description)/urdf/src2026.gazebo" />
+
+  <link name="launcher_link"/>
+  <joint name="launcher_joint" type="continuous">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="launcher_link"/>
+    <axis xyz="0 0 1"/>
+  </joint>
 
   <link name="base_footprint" />
   <joint name="base_link_joint" type="fixed">

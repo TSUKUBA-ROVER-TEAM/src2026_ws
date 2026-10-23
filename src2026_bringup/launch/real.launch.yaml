@@ -17,6 +17,16 @@ launch:
       default: can1
       description: SocketCAN interface used by the RobStride bridge
 
+  - arg:
+      name: use_odrive_launcher
+      default: 'false'
+  - arg:
+      name: odrive_can_interface
+      default: can1
+  - arg:
+      name: odrive_node_id
+      default: '0'
+
   - node:
       pkg: controller_manager
       exec: ros2_control_node
@@ -24,7 +34,7 @@ launch:
       output: screen
       param:
         - name: robot_description
-          value: $(command 'xacro $(find-pkg-share src2026_description)/urdf/src2026.xacro use_real_hardware:=true arm_only:=$(var arm_only) drive_only:=$(var drive_only) itr_can_interface:=$(var itr_can_interface)')
+          value: $(command 'xacro $(find-pkg-share src2026_description)/urdf/src2026.xacro use_real_hardware:=true arm_only:=$(var arm_only) drive_only:=$(var drive_only) itr_can_interface:=$(var itr_can_interface) use_odrive_launcher:=$(var use_odrive_launcher) odrive_can_interface:=$(var odrive_can_interface) odrive_node_id:=$(var odrive_node_id)')
         - from: $(find-pkg-share src2026_bringup)/config/real_controllers.yaml
 
   - node:
@@ -34,7 +44,7 @@ launch:
       output: screen
       param:
         - name: robot_description
-          value: $(command 'xacro $(find-pkg-share src2026_description)/urdf/src2026.xacro use_real_hardware:=true arm_only:=$(var arm_only) drive_only:=$(var drive_only) itr_can_interface:=$(var itr_can_interface)')
+          value: $(command 'xacro $(find-pkg-share src2026_description)/urdf/src2026.xacro use_real_hardware:=true arm_only:=$(var arm_only) drive_only:=$(var drive_only) itr_can_interface:=$(var itr_can_interface) use_odrive_launcher:=$(var use_odrive_launcher) odrive_can_interface:=$(var odrive_can_interface) odrive_node_id:=$(var odrive_node_id)')
 
   - node:
       pkg: controller_manager
@@ -91,3 +101,11 @@ launch:
       name: robstride_recovery_manager
       unless: $(var drive_only)
       output: screen
+
+  - node:
+      pkg: controller_manager
+      exec: spawner
+      name: launcher_controller_spawner
+      if: $(var use_odrive_launcher)
+      output: screen
+      args: launcher_controller -c /controller_manager

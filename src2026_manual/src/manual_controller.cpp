@@ -12,6 +12,8 @@ namespace trc2026_manual
 ManualController::ManualController(const rclcpp::NodeOptions & options)
 : BaseManualController("manual_controller_node", options)
 {
+  launcher_publisher_ = this->create_publisher<std_msgs::msg::Float64MultiArray>(
+    "/launcher_controller/commands", 1);
   cmd_vel_publisher_ = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 1);
   arm_velocity_publisher_ = this->create_publisher<std_msgs::msg::Float64MultiArray>(
     "/arm_velocity_controller/commands", 1);
@@ -108,6 +110,14 @@ ManualController::ManualController(const rclcpp::NodeOptions & options)
 
 void ManualController::joy_callback(const sensor_msgs::msg::Joy::SharedPtr msg)
 {
+  const auto launcher_target = launcher_trigger_.update(
+    msg->buttons.size() > 8, msg->buttons.size() > 8 && msg->buttons[8] != 0,
+    launcher_publisher_->get_subscription_count() > 0, launcher_clock_.now().seconds());
+  if (launcher_target) {
+    std_msgs::msg::Float64MultiArray command;
+    command.data = {*launcher_target};
+    launcher_publisher_->publish(command);
+  }
   last_joy_time_ = this->now();
   const auto axis_value = [&msg](int index) {
     return index >= 0 && static_cast<size_t>(index) < msg->axes.size() ? msg->axes[index] : 0.0;
@@ -236,6 +246,9 @@ void ManualController::joint_state_callback(const sensor_msgs::msg::JointState::
       return true;
     };
   double position = 0.0;
+  if (find_position("launcher_joint", position)) {
+    launcher_trigger_.feedback(position, launcher_clock_.now().seconds());
+  }
   if (!arm_position_targets_initialized_ && find_position("arm_4_joint", position)) {
     arm_4_position_target_ = position;
     arm_position_targets_initialized_ = true;

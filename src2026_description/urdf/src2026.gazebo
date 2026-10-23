@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <robot name="src2026" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
+  <xacro:if value="$(arg enable_robot_hardware)">
   <xacro:property name="body_color" value="Gazebo/Silver" />
 
   <xacro:arg name="gazebo" default="ignition" />
@@ -451,5 +452,34 @@
       </camera>
     </sensor>
   </gazebo>
+  </xacro:if>
+
+  <xacro:property name="odrive_trap_vel_limit" value="314.159265359"/>
+  <xacro:property name="odrive_trap_accel_limit" value="3141.59265359"/>
+  <xacro:property name="odrive_trap_decel_limit" value="3141.59265359"/>
+
+  <xacro:if value="$(arg use_odrive_launcher)">
+    <xacro:if value="$(arg use_real_hardware)">
+      <ros2_control name="ODriveLauncherSystem" type="system">
+        <hardware>
+          <plugin>odrive_ros2_control_plugin/ODriveHardwareInterface</plugin>
+          <param name="can">$(arg odrive_can_interface)</param>
+        </hardware>
+        <joint name="launcher_joint">
+          <param name="node_id">$(arg odrive_node_id)</param>
+          <param name="index_search_on_activate">true</param>
+          <param name="trap_vel_limit">${odrive_trap_vel_limit}</param>
+          <param name="trap_accel_limit">${odrive_trap_accel_limit}</param>
+          <param name="trap_decel_limit">${odrive_trap_decel_limit}</param>
+          <command_interface name="position"/>
+          <command_interface name="velocity"/>
+          <command_interface name="effort"/>
+          <state_interface name="position"/>
+          <state_interface name="velocity"/>
+          <state_interface name="effort"/>
+        </joint>
+      </ros2_control>
+    </xacro:if>
+  </xacro:if>
 
 </robot>

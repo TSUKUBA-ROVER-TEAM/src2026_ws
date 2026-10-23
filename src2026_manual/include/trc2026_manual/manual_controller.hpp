@@ -3,6 +3,8 @@
 
 #include "trc2026_manual/base_manual_controller.hpp"
 
+#include "trc2026_manual/launcher_trigger.hpp"
+
 #include <array>
 #include <string>
 #include <vector>
@@ -36,6 +38,10 @@ private:
   rclcpp::TimerBase::SharedPtr publish_timer_;
   rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_state_subscription_;
   rclcpp::Subscription<std_msgs::msg::Float64MultiArray>::SharedPtr health_subscription_;
+
+  rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr launcher_publisher_;
+  LauncherTrigger launcher_trigger_;
+  rclcpp::Clock launcher_clock_{RCL_STEADY_TIME};
 
   int arm_y_axis_ = 6;
   int arm_4_positive_axis_ = 2;

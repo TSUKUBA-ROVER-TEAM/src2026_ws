@@ -7,6 +7,8 @@ controller_manager:
       type: itr_swerve_controller/ITRSwerveController
     arm_position_controller:
       type: joint_trajectory_controller/JointTrajectoryController
+    launcher_controller:
+      type: forward_command_controller/ForwardCommandController
     arm_velocity_controller:
       type: forward_command_controller/ForwardCommandController
 
@@ -61,3 +63,8 @@ itr_swerve_controller:
     commanded_joint_states_topic: /swerve_commanded_joint_states
     commanded_joint_states_publish_rate: 50.0
 
+
+launcher_controller:
+  ros__parameters:
+    joints: [launcher_joint]
+    interface_name: position
