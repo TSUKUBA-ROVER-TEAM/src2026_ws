@@ -35,6 +35,7 @@ private:
   rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr arm_position_publisher_;
   rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr recovery_subscription_;
   bool recovery_ready_ = false;
+  bool arm_4_only_ = false;
   rclcpp::TimerBase::SharedPtr publish_timer_;
   rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_state_subscription_;
   rclcpp::Subscription<std_msgs::msg::Float64MultiArray>::SharedPtr health_subscription_;
@@ -56,6 +57,7 @@ private:
   int gripper_positive_button_ = 4;
   int gripper_negative_button_ = 5;
   double deadzone_ = 0.01;
+  double yaw_deadzone_ = 0.1;
 
   rclcpp::Time last_joy_time_;
   double joy_timeout_sec_ = 5.0;

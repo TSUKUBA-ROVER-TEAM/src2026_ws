@@ -26,7 +26,7 @@ launch:
       default: 'false'
   - arg:
       name: odrive_can_interface
-      default: can0
+      default: can1
   - arg:
       name: odrive_node_id
       default: '0'
@@ -95,6 +95,14 @@ launch:
   - node:
       pkg: controller_manager
       exec: spawner
+      name: arm_4_position_controller_spawner
+      if: $(eval "'$(var enable_robot_hardware)'.lower() in ('true', '1') and '$(var drive_only)'.lower() in ('true', '1')")
+      output: screen
+      args: arm_4_position_controller -c /controller_manager
+
+  - node:
+      pkg: controller_manager
+      exec: spawner
       name: itr_swerve_controller_spawner
       if: $(var enable_robot_hardware)
       output: screen
@@ -110,6 +118,9 @@ launch:
 
   - include:
       file: $(find-pkg-share src2026_manual)/launch/teleop.launch.yaml
+      arg:
+        - name: arm_4_only
+          value: $(eval "'$(var enable_robot_hardware)'.lower() in ('true', '1') and '$(var drive_only)'.lower() in ('true', '1')")
 
   - node:
       pkg: src2026_control

@@ -19,11 +19,21 @@ source install/setup.bash
 # 実機（足回り・アーム・グリッパー）
 just run real
 
+# アーム（RobStride）＋ITR
+just run arm_itr
+
+# 射出機構（ODrive）＋ITR（RobStrideはモック）
+just run launcher_itr
+
 # 実機＋ODrive射出機構
 just run real use_odrive_launcher:=true
 ```
 
 実機launchはゲームパッド操作も起動します。
+`arm_itr` はODriveを無効化し、`launcher_itr` はRobStrideの通信・復帰処理を起動しません。
+両モードともITR全体（足回り・ITR接続のアーム軸・グリッパー）を実機で使用します。
+CAN接続は `itr_can_interface` と、各モードの `robstride_can_interface` /
+`odrive_can_interface` で変更できます。`launcher_itr` は `odrive_node_id` も指定できます。
 
 一部だけを接続して試す場合：
 
@@ -112,3 +122,8 @@ CAN ID・減速比・制御上限は `src2026_description/urdf/`、
 コントローラ設定は `src2026_bringup/config/`、外部依存は `build_depends.repos` にあります。
 実機アームへの外部位置指令は `/arm_position_controller/position_targets` を使い、
 Recovery Managerを介して送ってください。
+
+`just run launcher_itr`（および `drive_only:=true`）では、arm_4専用の
+`arm_4_position_controller` も起動します。arm_4は従来どおりトリガー
+（axes[2] / axes[5]）で操作でき、最初の関節位置を受け取ってから指令を送ります。
+arm_1〜3のRobStrideとRecovery Managerは起動しません。

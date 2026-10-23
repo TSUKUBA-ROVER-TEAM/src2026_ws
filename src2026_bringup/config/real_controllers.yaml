@@ -7,6 +7,8 @@ controller_manager:
       type: itr_swerve_controller/ITRSwerveController
     arm_position_controller:
       type: joint_trajectory_controller/JointTrajectoryController
+    arm_4_position_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
     launcher_controller:
       type: forward_command_controller/ForwardCommandController
     arm_velocity_controller:
@@ -68,3 +70,12 @@ launcher_controller:
   ros__parameters:
     joints: [launcher_joint]
     interface_name: position
+
+arm_4_position_controller:
+  ros__parameters:
+    joints: [arm_4_joint]
+    command_interfaces: [position]
+    state_interfaces: [position]
+    set_last_command_interface_value_as_state_on_activation: false
+    interpolate_from_desired_state: true
+    interpolation_method: splines

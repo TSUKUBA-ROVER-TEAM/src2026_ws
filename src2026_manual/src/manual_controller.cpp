@@ -17,7 +17,9 @@ ManualController::ManualController(const rclcpp::NodeOptions & options)
   cmd_vel_publisher_ = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 1);
   arm_velocity_publisher_ = this->create_publisher<std_msgs::msg::Float64MultiArray>(
     "/arm_velocity_controller/commands", 1);
+  arm_4_only_ = this->declare_parameter("arm_4_only", false);
   arm_position_publisher_ = this->create_publisher<trajectory_msgs::msg::JointTrajectory>(
+    arm_4_only_ ? "/arm_4_position_controller/joint_trajectory" :
     "/arm_position_controller/position_targets", 1);
   recovery_subscription_ = this->create_subscription<std_msgs::msg::Bool>(
     "/arm_position_controller/recovery_ready", rclcpp::QoS(1).transient_local(),
@@ -61,6 +63,7 @@ ManualController::ManualController(const rclcpp::NodeOptions & options)
   this->declare_parameter("arm_2_max_tracking_error", 0.2);
   this->declare_parameter("gripper_velocity_scale", 5000.0);
   this->declare_parameter("deadzone", 0.01);
+  this->declare_parameter("yaw_deadzone", 0.1);
   this->declare_parameter("joy_timeout", 0.5);
 
   this->get_parameter("axis_linear_x", axis_linear_x_);
@@ -101,6 +104,10 @@ ManualController::ManualController(const rclcpp::NodeOptions & options)
   }
   this->get_parameter("gripper_velocity_scale", gripper_velocity_scale_);
   this->get_parameter("deadzone", deadzone_);
+  this->get_parameter("yaw_deadzone", yaw_deadzone_);
+  if (!std::isfinite(yaw_deadzone_) || yaw_deadzone_ < 0.0 || yaw_deadzone_ >= 1.0) {
+    throw std::invalid_argument("yaw_deadzone must be finite and in [0, 1)");
+  }
   this->get_parameter("joy_timeout", joy_timeout_sec_);
 
   last_joy_time_ = this->now();
@@ -128,7 +135,8 @@ void ManualController::joy_callback(const sensor_msgs::msg::Joy::SharedPtr msg)
 
   last_cmd_vel_.linear.x = axis_value(axis_linear_x_) * scale_linear_x_;
   last_cmd_vel_.linear.y = axis_value(axis_linear_y_) * scale_linear_y_;
-  last_cmd_vel_.angular.z = axis_value(axis_angular_z_) * scale_angular_z_;
+  const double yaw = axis_value(axis_angular_z_);
+  last_cmd_vel_.angular.z = std::abs(yaw) > yaw_deadzone_ ? yaw * scale_angular_z_ : 0.0;
   arm_y_velocity_command_ = deadzoned(axis_value(arm_y_axis_)) * arm_y_velocity_scale_;
   const auto positive_trigger =
     std::clamp((1.0 - axis_value(arm_4_positive_axis_)) / 2.0, 0.0, 1.0);
@@ -180,7 +188,7 @@ void ManualController::publish_timer_callback()
   if (command_is_fresh) {
     velocity_command.data[0] = arm_y_velocity_command_;
     velocity_command.data[1] = gripper_velocity_command_;
-    if (recovery_ready_ && arm_position_targets_initialized_) {
+    if ((arm_4_only_ || recovery_ready_) && arm_position_targets_initialized_) {
       arm_4_position_target_ += arm_4_axis_command_ * arm_4_position_rate_ * period_sec;
     }
     if (recovery_ready_ && selected_arm_123_joint_ >= 0 &&
@@ -229,7 +237,12 @@ void ManualController::publish_timer_callback()
       synchronized = false;
     }
   }
-  if (recovery_ready_ && synchronized) {
+  if (arm_4_only_ && arm_position_targets_initialized_) {
+    position_command.joint_names = {"arm_4_joint"};
+    position_point.positions = {arm_4_position_target_};
+    position_command.header.stamp = this->now();
+    arm_position_publisher_->publish(position_command);
+  } else if (!arm_4_only_ && recovery_ready_ && synchronized) {
     position_command.header.stamp = this->now();
     arm_position_publisher_->publish(position_command);
   }
