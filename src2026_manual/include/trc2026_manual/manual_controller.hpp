@@ -72,7 +72,7 @@ private:
   double arm_4_axis_command_ = 0.0;
   double gripper_velocity_command_ = 0.0;
   double arm_4_position_target_ = 0.0;
-  std::vector<double> arm_123_position_rates_{2.0, 0.2, 0.5};
+  std::vector<double> arm_123_position_rates_{4.0, 0.2, 0.5};
   double arm_position_trajectory_duration_ = 0.1;
   double arm_123_max_tracking_error_ = 0.1;
   double arm_2_max_tracking_error_ = 0.2;
