@@ -57,7 +57,7 @@ ManualController::ManualController(const rclcpp::NodeOptions & options)
   this->declare_parameter("gripper_negative_button", 4);
   this->declare_parameter("arm_y_velocity_scale", 20000.0);
   this->declare_parameter("arm_4_position_rate", 10.0);
-  this->declare_parameter("arm_123_position_rates", std::vector<double>{1.0, 0.1, 0.5});
+  this->declare_parameter("arm_123_position_rates", std::vector<double>{2.0, 0.2, 0.5});
   this->declare_parameter("arm_position_trajectory_duration", 0.1);
   this->declare_parameter("arm_123_max_tracking_error", 0.1);
   this->declare_parameter("arm_2_max_tracking_error", 0.2);
