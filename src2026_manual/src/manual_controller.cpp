@@ -53,8 +53,8 @@ ManualController::ManualController(const rclcpp::NodeOptions & options)
   this->declare_parameter("arm_1_button", 1);
   this->declare_parameter("arm_2_button", 2);
   this->declare_parameter("arm_3_button", 3);
-  this->declare_parameter("gripper_positive_button", 4);
-  this->declare_parameter("gripper_negative_button", 5);
+  this->declare_parameter("gripper_positive_button", 5);
+  this->declare_parameter("gripper_negative_button", 4);
   this->declare_parameter("arm_y_velocity_scale", 20000.0);
   this->declare_parameter("arm_4_position_rate", 10.0);
   this->declare_parameter("arm_123_position_rates", std::vector<double>{1.0, 0.1, 0.5});
@@ -137,7 +137,7 @@ void ManualController::joy_callback(const sensor_msgs::msg::Joy::SharedPtr msg)
   last_cmd_vel_.linear.y = axis_value(axis_linear_y_) * scale_linear_y_;
   const double yaw = axis_value(axis_angular_z_);
   last_cmd_vel_.angular.z = std::abs(yaw) > yaw_deadzone_ ? yaw * scale_angular_z_ : 0.0;
-  arm_y_velocity_command_ = deadzoned(axis_value(arm_y_axis_)) * arm_y_velocity_scale_;
+  arm_y_velocity_command_ = deadzoned(axis_value(arm_y_axis_)) * arm_y_velocity_scale_ * -1.0;
   const auto positive_trigger =
     std::clamp((1.0 - axis_value(arm_4_positive_axis_)) / 2.0, 0.0, 1.0);
   const auto negative_trigger =
