@@ -155,7 +155,7 @@ void ManualController::joy_callback(const sensor_msgs::msg::Joy::SharedPtr msg)
   selected_arm_123_joint_ = selected_count == 1 ?
     (arm_1_selected ? 0 : (arm_2_selected ? 1 : 2)) : -1;
   arm_123_axis_command_ = selected_arm_123_joint_ >= 0 ?
-    deadzoned(axis_value(arm_123_axis_)) : 0.0;
+    deadzoned(axis_value(arm_123_axis_)) * (arm_1_selected ? -1.0 : 1.0) : 0.0;
 
   const bool positive_button = gripper_positive_button_ >= 0 &&
     static_cast<size_t>(gripper_positive_button_) < msg->buttons.size() &&
