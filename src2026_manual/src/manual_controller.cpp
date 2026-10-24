@@ -43,9 +43,9 @@ ManualController::ManualController(const rclcpp::NodeOptions & options)
   this->declare_parameter("axis_linear_x", 4);
   this->declare_parameter("axis_linear_y", 3);
   this->declare_parameter("axis_angular_z", 0);
-  this->declare_parameter("scale_linear_x", 1.0);
-  this->declare_parameter("scale_linear_y", 1.0);
-  this->declare_parameter("scale_angular_z", 1.0);
+  this->declare_parameter("scale_linear_x", 2.0);
+  this->declare_parameter("scale_linear_y", 2.0);
+  this->declare_parameter("scale_angular_z", 3.0);
   this->declare_parameter("arm_y_axis", 6);
   this->declare_parameter("arm_4_positive_axis", 2);
   this->declare_parameter("arm_4_negative_axis", 5);
